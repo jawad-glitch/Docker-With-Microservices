@@ -1,80 +1,103 @@
 # 🐳 Docker Microservices Architecture
 
-A containerized e-commerce backend built with **Node.js microservices**, **Docker**, and **Docker Compose**.  
-Features an **API Gateway**, inter-service communication, health checks, and horizontal scaling.
+A containerized e-commerce backend built with **Node.js microservices**, **Docker**, and **Docker Compose**. Features an **API Gateway**, inter-service communication, health checks, and horizontal scaling.
 
-🛠️ Tech Stack
-- Runtime: Node.js 18 (Alpine)
-- Framework: Express.js
-- HTTP Client: Axios (Order Service)
-- API Gateway: http-proxy-middleware + express-rate-limit
-- Load Balancer: Nginx
-- Containerization: Docker + Docker Compose
+![Node.js](https://img.shields.io/badge/Node.js-18_Alpine-339933?logo=node.js&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-Framework-000000?logo=express&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-Load_Balancer-009639?logo=nginx&logoColor=white)
 
 ---
 
-## 📐 Architecture Overview
+## 🛠️ Tech Stack
 
-Client
-└── API Gateway (port 3000)
-├── /api/users → User Service (port 3001)
-├── /api/products → Product Service (port 3002)
-└── /api/orders → Order Service (port 3003)
-├── calls User Service
-└── calls Product Service
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 18 (Alpine) |
+| Framework | Express.js |
+| HTTP Client | Axios (Order Service) |
+| API Gateway | http-proxy-middleware + express-rate-limit |
+| Load Balancer | Nginx |
+| Containerization | Docker + Docker Compose |
 
+---
 
-All services communicate over a shared Docker bridge network:  
-`microservices-network`
+## 📐 Architecture
+
+```mermaid
+graph TD
+    Client(["🖥️ Client"])
+
+    subgraph Gateway["API Gateway · port 3000"]
+        GW["Rate Limiting + Proxy"]
+    end
+
+    subgraph Services["Microservices · Docker Bridge Network"]
+        US["👤 User Service\nport 3001"]
+        PS["📦 Product Service\nport 3002"]
+        OS["🧾 Order Service\nport 3003"]
+    end
+
+    Client --> GW
+    GW -->|"/api/users"| US
+    GW -->|"/api/products"| PS
+    GW -->|"/api/orders"| OS
+    OS -->|"Fetch user details"| US
+    OS -->|"Fetch product details"| PS
+```
+
+All services communicate over a shared Docker bridge network: `microservices-network`
 
 ---
 
 ## 🧩 Services
 
-| Service          | Port | Description |
-|------------------|------|------------|
-| API Gateway      | 3000 | Single entry point, rate limiting, request proxying |
-| User Service     | 3001 | User registration and profile management |
-| Product Service  | 3002 | Product catalog with filtering and stock management |
-| Order Service    | 3003 | Order processing with inter-service calls |
+| Service | Port | Description |
+|---|---|---|
+| API Gateway | `3000` | Single entry point — rate limiting & request proxying |
+| User Service | `3001` | User registration and profile management |
+| Product Service | `3002` | Product catalog with filtering and stock management |
+| Order Service | `3003` | Order processing with inter-service calls |
 
 ---
 
 ## 📁 Project Structure
 
+```
 microservices-lab/
-├── user-service/
-│ ├── app.js
-│ ├── package.json
-│ └── Dockerfile
-├── product-service/
-│ ├── app.js
-│ ├── package.json
-│ └── Dockerfile
-├── order-service/
-│ ├── app.js
-│ ├── package.json
-│ └── Dockerfile
 ├── api-gateway/
-│ ├── app.js
-│ ├── package.json
-│ └── Dockerfile
+│   ├── app.js
+│   ├── package.json
+│   └── Dockerfile
+├── user-service/
+│   ├── app.js
+│   ├── package.json
+│   └── Dockerfile
+├── product-service/
+│   ├── app.js
+│   ├── package.json
+│   └── Dockerfile
+├── order-service/
+│   ├── app.js
+│   ├── package.json
+│   └── Dockerfile
 ├── nginx-lb/
-│ ├── nginx.conf
-│ └── Dockerfile
+│   ├── nginx.conf
+│   └── Dockerfile
 ├── docker-compose-files/
-│ └── docker-compose.yml
+│   └── docker-compose.yml
 ├── monitor-services.sh
 └── load-test.sh
-
+```
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
-- Docker Engine
-- Docker Compose
+
+- [Docker Engine](https://docs.docker.com/engine/install/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
 ### Run All Services
 
@@ -89,6 +112,10 @@ docker-compose up -d
 ```bash
 docker-compose ps
 ```
+
+---
+
+## 🔍 API Reference
 
 ### Health Checks
 
@@ -114,7 +141,7 @@ curl -X POST http://localhost:3000/api/users \
   -d '{"name": "Alice", "email": "alice@example.com", "role": "customer"}'
 ```
 
-### products
+### Products
 
 ```bash
 # Get all products
@@ -155,16 +182,20 @@ curl -X PATCH http://localhost:3000/api/orders/1/status \
   -d '{"status": "shipped"}'
 ```
 
-## Scaling
+---
 
-### Scale any service horizontally:
+## ⚖️ Scaling
+
+Scale any service horizontally with a single command:
 
 ```bash
 # Scale product service to 3 instances
 docker-compose up -d --scale product-service=3
 ```
 
-## Monitoring
+---
+
+## 📊 Monitoring
 
 ```bash
 # Health check all services
@@ -176,12 +207,16 @@ docker-compose up -d --scale product-service=3
 # Live resource usage
 docker stats
 
-# Logs
+# Stream all logs
 docker-compose logs -f
+
+# Stream logs for a specific service
 docker-compose logs -f user-service
 ```
 
-## Docker Commands Reference
+---
+
+## 🐳 Docker Commands Reference
 
 ```bash
 # Build images
@@ -190,15 +225,15 @@ docker-compose build
 # Start services
 docker-compose up -d
 
-# Stop services
+# Stop and remove containers
 docker-compose down
 
 # Rebuild & restart
 docker-compose up -d --build
 
-# Running containers
+# List running containers
 docker-compose ps
 
-# Inspect network
+# Inspect the shared network
 docker network inspect microservices-network
 ```
